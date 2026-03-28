@@ -39,7 +39,7 @@ def get_outliers(df: pd.DataFrame) -> dict:
             "lower_bound": round(lower, 4),
             "upper_bound": round(upper, 4),
             "outlier_count": int(len(outliers)),
-            "outlier_pct": round(len(outliers) / len(series) * 100, 2)
+            "outlier_pct": round(len(outliers) / len(series) * 100, 2) if len(series) > 0 else 0.0
         })
 
         # --- Boxplot ---
