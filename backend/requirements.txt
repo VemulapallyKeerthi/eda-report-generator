@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pandas
+numpy
+scipy
+matplotlib
+seaborn
+jinja2
+xhtml2pdf
+groq
+anthropic
