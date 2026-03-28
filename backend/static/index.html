@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EDA Report Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 48px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 { color: #1a202c; font-size: 28px; margin-bottom: 8px; }
+    p.subtitle { color: #718096; font-size: 15px; margin-bottom: 36px; }
+
+    .upload-area {
+      border: 2px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 40px 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 24px;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #2980b9;
+      background: #ebf8ff;
+    }
+    .upload-icon { font-size: 48px; margin-bottom: 12px; }
+    .upload-area p { color: #718096; font-size: 14px; }
+    .upload-area strong { color: #2980b9; }
+    #fileInput { display: none; }
+    #fileName {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #2980b9;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #2471a3; }
+    button:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    .status {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.loading {
+      background: #ebf8ff;
+      color: #2980b9;
+      display: block;
+    }
+    .status.success {
+      background: #f0fff4;
+      color: #276749;
+      display: block;
+    }
+    .status.error {
+      background: #fff5f5;
+      color: #c53030;
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #2980b9;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .features {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 32px;
+      gap: 12px;
+    }
+    .feature {
+      flex: 1;
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 16px 10px;
+      font-size: 12px;
+      color: #4a5568;
+    }
+    .feature span { font-size: 22px; display: block; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 EDA Report Generator</h1>
+    <p class="subtitle">Upload any CSV file and get a full PDF analysis report with AI insights</p>
+
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📁</div>
+      <p><strong>Click to upload</strong> or drag and drop</p>
+      <p>CSV files only</p>
+      <div id="fileName"></div>
+    </div>
+    <input type="file" id="fileInput" accept=".csv" />
+
+    <button id="generateBtn" onclick="generateReport()" disabled>
+      Generate Report
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <div class="features">
+      <div class="feature"><span>📈</span>Distributions</div>
+      <div class="feature"><span>🔍</span>Outlier Detection</div>
+      <div class="feature"><span>🔗</span>Correlations</div>
+      <div class="feature"><span>🤖</span>AI Summary</div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const generateBtn = document.getElementById('generateBtn');
+    const fileNameDiv = document.getElementById('fileName');
+    const status = document.getElementById('status');
+
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        fileNameDiv.textContent = '✓ ' + selectedFile.name;
+        generateBtn.disabled = false;
+      }
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.csv')) {
+        selectedFile = file;
+        fileNameDiv.textContent = '✓ ' + file.name;
+        generateBtn.disabled = false;
+      } else {
+        showStatus('error', 'Please drop a CSV file.');
+      }
+    });
+
+    async function generateReport() {
+      if (!selectedFile) return;
+
+      generateBtn.disabled = true;
+      showStatus('loading', '<span class="spinner"></span> Generating your report... this may take 20-30 seconds');
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Something went wrong');
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'eda_report.pdf';
+        a.click();
+
+        showStatus('success', '✅ Report generated and downloaded successfully!');
+      } catch (err) {
+        showStatus('error', '❌ Error: ' + err.message);
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    function showStatus(type, message) {
+      status.className = 'status ' + type;
+      status.innerHTML = message;
+    }
+  </script>
+</body>
+</html>
