@@ -7,6 +7,6 @@ scipy
 matplotlib
 seaborn
 jinja2
-xhtml2pdf
+reportlab
 groq
 anthropic
