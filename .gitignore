@@ -1,3 +1,7 @@
 venv/
 __pycache__/
 *.pyc
+*.pdf
+*.env
+.env
+temp_report_*.pdf

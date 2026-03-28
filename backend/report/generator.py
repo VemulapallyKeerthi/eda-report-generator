@@ -11,7 +11,7 @@ from analyzer.correlations import get_correlations
 from analyzer.summary import get_summary
 from report.ai_summary import generate_ai_summary
 
-def generate_report(df: pd.DataFrame, output_path: str = "report_output.pdf"):
+def generate_report(df: pd.DataFrame, output_path: str = "report_output.html"):
     print("Running analysis...")
     overview      = get_overview(df)
     missing       = get_missing(df)
@@ -38,13 +38,9 @@ def generate_report(df: pd.DataFrame, output_path: str = "report_output.pdf"):
         ai_summary=ai_summary
     )
 
-    print("Generating PDF...")
-    with open(output_path, "wb") as f:
-        pisa_status = pisa.CreatePDF(html_content, dest=f)
-
-    if pisa_status.err:
-        print(f"PDF generation error: {pisa_status.err}")
-    else:
-        print(f"Report saved to: {output_path}")
-
+    print("Generating HTML report...")
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    
+    print(f"Report saved to: {output_path}")
     return output_path

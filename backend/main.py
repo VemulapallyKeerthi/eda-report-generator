@@ -58,7 +58,7 @@ async def upload_csv(file: UploadFile = File(...)):
         pdf_bytes = f.read()
 
     return StreamingResponse(
-        io.BytesIO(pdf_bytes),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=eda_report_{file.filename}.pdf"}
+    io.BytesIO(html_content.encode("utf-8")),
+    media_type="text/html",
+    headers={"Content-Disposition": f"attachment; filename=eda_report.html"}
     )
