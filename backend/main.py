@@ -1,19 +1,13 @@
 import io
 import pandas as pd
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 from report.generator import generate_report
 
 app = FastAPI(title="EDA Report Generator")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/")
-def root():
-    return FileResponse("static/index.html")    
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,9 +16,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/")
 def root():
-    return {"message": "EDA Report Generator API is running"}
+    return FileResponse("static/index.html")
 
 @app.post("/upload")
 async def upload_csv(file: UploadFile = File(...)):
@@ -48,17 +44,13 @@ async def upload_csv(file: UploadFile = File(...)):
 
     # Generate report
     try:
-        output_path = f"temp_report_{file.filename}.pdf"
-        generate_report(df, output_path=output_path)
+        output_path = f"temp_report_{file.filename}.html"
+        _, html_content = generate_report(df, output_path=output_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
 
-    # Stream PDF back
-    with open(output_path, "rb") as f:
-        pdf_bytes = f.read()
-
     return StreamingResponse(
-    io.BytesIO(html_content.encode("utf-8")),
-    media_type="text/html",
-    headers={"Content-Disposition": f"attachment; filename=eda_report.html"}
+        io.BytesIO(html_content.encode("utf-8")),
+        media_type="text/html",
+        headers={"Content-Disposition": f"attachment; filename=eda_report.html"}
     )

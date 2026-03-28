@@ -1,6 +1,5 @@
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
-from xhtml2pdf import pisa
 import os
 
 from analyzer.overview import get_overview
@@ -38,9 +37,9 @@ def generate_report(df: pd.DataFrame, output_path: str = "report_output.html"):
         ai_summary=ai_summary
     )
 
-    print("Generating HTML report...")
+    print("Saving report...")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
-    
+
     print(f"Report saved to: {output_path}")
-    return output_path
+    return output_path, html_content
